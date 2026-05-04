@@ -152,11 +152,15 @@
   }
   .mockup-wrap img {
     width: 100%;
-    aspect-ratio: 16/9;
+    min-height: 380px;
+    max-height: 420px;
     object-fit: cover;
     object-position: top;
     display: block;
+    cursor: zoom-in;
+    transition: opacity 0.15s ease;
   }
+  .mockup-wrap img:hover { opacity: 0.92; }
   .mockup-reveal {
     opacity: 0;
     transform: translateY(28px);
@@ -189,6 +193,43 @@
   .module-card{cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s}
   .module-card:hover{border-color:var(--brand)!important;background:#FFF5ED!important;box-shadow:0 8px 24px rgba(245,98,32,.15)!important;transform:translateY(-4px)}
   .module-details{display:none}
+
+  /* ── Lightbox ── */
+  #ts-lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(15,23,42,0.88);
+    backdrop-filter: blur(6px);
+    cursor: zoom-out;
+    align-items: center;
+    justify-content: center;
+    animation: lb-in 0.2s ease;
+  }
+  #ts-lightbox.open { display: flex; }
+  @keyframes lb-in { from { opacity:0; } to { opacity:1; } }
+  #ts-lightbox img {
+    max-width: 90vw;
+    max-height: 88vh;
+    border-radius: 14px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.65);
+    object-fit: contain;
+    cursor: default;
+    animation: lb-scale 0.22s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes lb-scale { from { transform:scale(.93); } to { transform:scale(1); } }
+  #ts-lb-close {
+    position: fixed;
+    top: 20px; right: 24px;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: none; cursor: pointer; color: white;
+    font-size: 22px; line-height: 40px; text-align: center;
+    transition: background 0.15s;
+  }
+  #ts-lb-close:hover { background: rgba(255,255,255,0.22); }
 </style>
 </head>
 <body>
@@ -1550,5 +1591,49 @@
   <div id="floating-logo-inner" style="display:flex; align-items:center; gap:8px"></div>
 </div>
 
+
+<!-- Lightbox -->
+<div id="ts-lightbox">
+  <button id="ts-lb-close" onclick="document.getElementById('ts-lightbox').classList.remove('open')">×</button>
+  <img id="ts-lb-img" src="" alt="Preview">
+</div>
+<script>
+(function() {
+  var lb = document.getElementById('ts-lightbox');
+  var lbImg = document.getElementById('ts-lb-img');
+
+  function openLb(src) {
+    lbImg.src = src;
+    lb.classList.add('open');
+  }
+
+  lb.addEventListener('click', function(e) {
+    if (e.target === lb) lb.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') lb.classList.remove('open');
+  });
+
+  function attachZoom() {
+    var imgs = document.querySelectorAll('.mockup-wrap img, #mod-drive img, #mod-secu img, #mod-newsfeed img, #mod-chat img, #mod-projets img');
+    imgs.forEach(function(img) {
+      if (!img.dataset.lbAttached) {
+        img.dataset.lbAttached = '1';
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function() { openLb(this.src); });
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', attachZoom);
+  // Also attach after module switch
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('module-tab')) {
+      setTimeout(attachZoom, 50);
+    }
+  });
+})();
+</script>
 </body>
 </html>
